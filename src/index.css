@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cherry+Bomb+One&family=DynaPuff:wght@400;500;600;700&family=Fontdiner+Swanky&family=Google+Sans:wght@400;500;600;700&family=Inter:wght@400;700&family=Michroma&family=Outfit:wght@400;700&family=Roboto:wght@400;500;700&family=Risque&family=Space+Grotesk:wght@400;700&family=Sour+Gummy:wght@400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+/* Existing fonts */
+.font-one {
+  font-family: "Bebas Neue", sans-serif;
+}
+
+.font-two {
+  font-family: "Risque", serif;
+}
+
+.font-three {
+  font-family: "Fontdiner Swanky", serif;
+}
+
+.font-four {
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.font-five {
+  font-family: "Inter", sans-serif;
+}
+
+.font-six {
+  font-family: "Outfit", sans-serif;
+}
+
+.font-seven {
+  font-family: "Michroma", sans-serif;
+}
+
+/* New memecoin fonts */
+.font-dynapuff {
+  font-family: "DynaPuff", cursive;
+}
+
+.font-cherry {
+  font-family: "Cherry Bomb One", cursive;
+}
+
+.font-google {
+  font-family: "Google Sans", sans-serif;
+}
+
+.font-sour {
+  font-family: "Sour Gummy", cursive;
+}
+
+.font-roboto {
+  font-family: "Roboto", sans-serif;
+}
