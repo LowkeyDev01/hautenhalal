@@ -498,7 +498,7 @@ export default function Navbar() {
 
                                 {/* NAV LINKS */}
                                 <div className="flex flex-col gap-4 mt-8 font-six text-lg">
-                                    {['Home', 'Shop', 'About Us', 'Contact'].map((link) => (
+                                    {['Home', 'Shop', 'Contact'].map((link) => (
                                         <motion.a
                                             key={link}
                                             href="#"
