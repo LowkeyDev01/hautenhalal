@@ -780,38 +780,6 @@ export default function AdminPage() {
                                     : "Create account"}
                         </button>
                     </form>
-
-                    <div className="mt-8 text-center text-xs text-neutral-400">
-                        {authMode === "login" ? (
-                            <>
-                                New administrator?{" "}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setAuthMode("register");
-                                        setAuthError("");
-                                    }}
-                                    className="text-black underline underline-offset-4"
-                                >
-                                    Register
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                Already have an account?{" "}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setAuthMode("login");
-                                        setAuthError("");
-                                    }}
-                                    className="text-black underline underline-offset-4"
-                                >
-                                    Sign in
-                                </button>
-                            </>
-                        )}
-                    </div>
                 </motion.div>
             </main>
         );
