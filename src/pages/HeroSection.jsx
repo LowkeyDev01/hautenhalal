@@ -114,7 +114,7 @@ export default function Hero() {
                     className="mt-5"
                 >
                     <a
-                        href="/shop"
+                        href="/#shop"
                         className="group inline-flex items-center gap-4 bg-black text-white rounded-full px-6 py-3.5 text-xs md:text-sm transition-all duration-300 hover:bg-neutral-800 hover:gap-6"
                     >
                         <div>Go to Collection</div>
