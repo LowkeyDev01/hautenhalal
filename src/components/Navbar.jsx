@@ -206,13 +206,12 @@ export default function Navbar() {
         const whatsappUrl =
             `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
-        const whatsappWindow = window.open(whatsappUrl, '_blank');
+        // Clear cart and close drawer before redirecting
+        saveCart([]);
+        setCartOpen(false);
 
-        if (whatsappWindow) {
-            whatsappWindow.opener = null;
-            saveCart([]);
-            setCartOpen(false);
-        }
+        // Use window.location.href to reliably avoid mobile/ad-blocker popup issues
+        window.location.href = whatsappUrl;
     };
 
     // Smooth scroll handler for one-page sections
