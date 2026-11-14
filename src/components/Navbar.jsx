@@ -1,6 +1,6 @@
-
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import Logo from '../assets/logo.png';
 
@@ -17,7 +17,7 @@ import {
 const CART_KEY = 'haute-n-halaal-cart';
 
 // Include country code, without + or spaces.
-const WHATSAPP_NUMBER = '2348137811382';
+const WHATSAPP_NUMBER = '2348184187105';
 
 const formatPrice = (price) =>
     `₦${Number(price).toLocaleString('en-NG')}`;
@@ -77,11 +77,21 @@ const itemVariants = {
     }
 };
 
+const NAV_ITEMS = [
+    { label: 'Home', sectionId: 'home' },
+    { label: 'Shop', sectionId: 'shop' },
+    { label: 'Collections', sectionId: 'collections' },
+    { label: 'Contact', sectionId: 'contact' }
+];
+
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
     const [cart, setCart] = useState([]);
     const [isScrolled, setIsScrolled] = useState(false);
+
+    const location = useLocation();
+    const navigate = useNavigate();
 
     const cartCount = cart.reduce(
         (total, item) => total + item.quantity,
@@ -110,7 +120,7 @@ export default function Navbar() {
         };
     }, []);
 
-    // Load cart and listen for updates from Shop.jsx.
+    // Load cart and listen for updates.
     useEffect(() => {
         const loadCart = () => {
             try {
@@ -205,20 +215,50 @@ export default function Navbar() {
         }
     };
 
+    // Smooth scroll handler for one-page sections
+    const handleSectionClick = (e, sectionId) => {
+        e.preventDefault();
+        setIsOpen(false);
+
+        const scrollToElement = () => {
+            if (sectionId === 'home') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+        // If user is on a collection detail page, navigate home first, then scroll
+        if (location.pathname !== '/') {
+            navigate('/');
+            setTimeout(scrollToElement, 150);
+        } else {
+            scrollToElement();
+        }
+    };
+
     return (
         <>
             {/* MAIN NAVBAR */}
             <div
                 className={`fixed top-0 left-0 w-full overflow-x-hidden z-50 grid grid-cols-2 py-4 transition-colors duration-500 ${
-                    isScrolled ? 'bg-white' : 'bg-transparent'
+                    isScrolled ? 'bg-white shadow-sm' : 'bg-transparent'
                 }`}
             >
 
                 {/* LOGO */}
-                <div className="px-3 md:px-18 flex flex-row items-center">
+                <Link
+                    to="/"
+                    onClick={(e) => handleSectionClick(e, 'home')}
+                    className="px-3 md:px-18 flex flex-row items-center cursor-pointer"
+                >
                     <img
                         src={Logo}
-                        className="h-14 w-13"
+                        className="h-14 w-13 object-contain"
                         alt="Logo"
                     />
 
@@ -226,7 +266,7 @@ export default function Navbar() {
                         <p>HAUTE N</p>
                         <p className="-mt-1.5">HALAAL</p>
                     </div>
-                </div>
+                </Link>
 
                 {/* NAV ACTIONS */}
                 <div className="pr-3 md:pr-18 flex flex-row gap-8 justify-end items-center">
@@ -278,7 +318,7 @@ export default function Navbar() {
                             initial="hidden"
                             animate="visible"
                             exit="closed"
-                            className="fixed top-0 right-0 h-screen w-[80%] md:w-[30%] bg-white z-[70] rounded-l-2xl overflow-hidden"
+                            className="fixed top-0 right-0 h-screen w-[80%] md:w-[30%] bg-white z-[70] rounded-l-2xl overflow-hidden shadow-2xl"
                         >
                             <motion.div
                                 variants={contentVariants}
@@ -458,7 +498,7 @@ export default function Navbar() {
                             initial="hidden"
                             animate="visible"
                             exit="closed"
-                            className="fixed top-0 right-0 h-screen w-[80%] md:w-[40%] lg:w-[20%] bg-white z-[70] rounded-l-2xl overflow-hidden"
+                            className="fixed top-0 right-0 h-screen w-[80%] md:w-[40%] lg:w-[20%] bg-white z-[70] rounded-l-2xl overflow-hidden shadow-2xl"
                         >
                             <motion.div
                                 variants={contentVariants}
@@ -486,7 +526,7 @@ export default function Navbar() {
                                 >
                                     <img
                                         src={Logo}
-                                        className="h-12 w-11"
+                                        className="h-12 w-11 object-contain"
                                         alt="Logo"
                                     />
 
@@ -496,17 +536,17 @@ export default function Navbar() {
                                     </div>
                                 </motion.div>
 
-                                {/* NAV LINKS */}
-                                <div className="flex flex-col gap-4 mt-8 font-six text-lg">
-                                    {['Home', 'Shop', 'Contact'].map((link) => (
+                                {/* ONE-PAGE SECTION LINKS */}
+                                <div className="flex flex-col gap-5 mt-8 font-six text-lg">
+                                    {NAV_ITEMS.map(({ label, sectionId }) => (
                                         <motion.a
-                                            key={link}
-                                            href="#"
+                                            key={sectionId}
+                                            href={`#${sectionId}`}
                                             variants={itemVariants}
-                                            onClick={() => setIsOpen(false)}
-                                            className="w-fit"
+                                            onClick={(e) => handleSectionClick(e, sectionId)}
+                                            className="w-fit hover:text-neutral-500 transition-colors cursor-pointer"
                                         >
-                                            {link}
+                                            {label}
                                         </motion.a>
                                     ))}
                                 </div>
@@ -543,7 +583,7 @@ export default function Navbar() {
                                     </p>
 
                                     <a
-                                        href="https://wa.me/YOURNUMBER"
+                                        href={`https://wa.me/${WHATSAPP_NUMBER}`}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="w-full bg-black rounded-full text-white py-3 px-4 text-center text-xs tracking-widest font-five hover:bg-neutral-800 transition-colors"

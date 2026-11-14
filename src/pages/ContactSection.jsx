@@ -116,7 +116,7 @@ export default function Contact() {
                             className="mt-5"
                         >
                             <a
-                                href="https://wa.me/234XXXXXXXXXX"
+                                href="https://wa.me/2348184187105"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="group inline-flex items-center gap-4 bg-black text-white rounded-full px-6 py-3.5 text-xs md:text-sm transition-all duration-300 hover:bg-neutral-800 hover:gap-6"
