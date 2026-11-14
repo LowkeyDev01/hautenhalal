@@ -1,50 +1,22 @@
 
 import { useEffect, useState } from 'react';
-import { FiPlus, FiX, FiMinus, FiChevronDown, FiCheck } from 'react-icons/fi';
 
-const products = [
-    {
-        id: 1,
-        name: 'Essential Oversized Tee',
-        price: 28000,
-        image: '/images/tee.png',
-        category: 'Tops'
-    },
-    {
-        id: 2,
-        name: 'H Signature Hoodie',
-        price: 48000,
-        image: '/images/hoodie.png',
-        category: 'Hoodies'
-    },
-    {
-        id: 3,
-        name: 'Cargo Pants',
-        price: 42000,
-        image: '/images/cargo.png',
-        category: 'Bottoms'
-    },
-    {
-        id: 4,
-        name: 'Relaxed Sweatpants',
-        price: 38000,
-        image: '/images/sweatpants.png',
-        category: 'Bottoms'
-    },
-    {
-        id: 5,
-        name: 'H Jersey',
-        price: 32000,
-        image: '/images/jersey.png',
-        category: 'Tops'
-    }
-];
+import {
+    FiPlus,
+    FiX,
+    FiMinus,
+    FiChevronDown,
+    FiCheck,
+    FiLoader
+} from 'react-icons/fi';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const sizes = ['S', 'M', 'L', 'XL'];
 const CART_KEY = 'haute-n-halaal-cart';
 
 const formatPrice = (price) => {
-    return `₦${price.toLocaleString('en-NG')}`;
+    return `₦${Number(price).toLocaleString('en-NG')}`;
 };
 
 const getSavedCart = () => {
@@ -56,6 +28,10 @@ const getSavedCart = () => {
 };
 
 export default function Shop() {
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [selectedSize, setSelectedSize] = useState('');
     const [quantity, setQuantity] = useState(1);
@@ -63,7 +39,44 @@ export default function Shop() {
     const [cartCount, setCartCount] = useState(0);
     const [added, setAdded] = useState(false);
 
-    // Load cart and keep the displayed count updated.
+    // ==========================================
+    // FETCH PRODUCTS FROM BACKEND
+    // ==========================================
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                setLoading(true);
+                setError('');
+
+                const response = await fetch(
+                    `${API_URL}/api/products`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Unable to fetch products.');
+                }
+
+                setProducts(data.products || []);
+
+            } catch (error) {
+                console.error('Products fetch error:', error);
+                setError('We couldn’t load the collection. Please try again.');
+
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProducts();
+    }, []);
+
+    // ==========================================
+    // CART COUNT
+    // ==========================================
+
     useEffect(() => {
         const updateCartCount = () => {
             const cart = getSavedCart();
@@ -84,11 +97,25 @@ export default function Shop() {
         };
     }, []);
 
+    // ==========================================
+    // SORT PRODUCTS
+    // ==========================================
+
     const sortedProducts = [...products].sort((a, b) => {
-        if (sort === 'low') return a.price - b.price;
-        if (sort === 'high') return b.price - a.price;
-        return a.id - b.id;
+        if (sort === 'low') {
+            return Number(a.price) - Number(b.price);
+        }
+
+        if (sort === 'high') {
+            return Number(b.price) - Number(a.price);
+        }
+
+        return new Date(b.created_at) - new Date(a.created_at);
     });
+
+    // ==========================================
+    // MODAL
+    // ==========================================
 
     const openModal = (product) => {
         setSelectedProduct(product);
@@ -103,6 +130,10 @@ export default function Shop() {
         setQuantity(1);
         setAdded(false);
     };
+
+    // ==========================================
+    // ADD TO CART
+    // ==========================================
 
     const addToCart = () => {
         if (!selectedProduct || !selectedSize || added) return;
@@ -121,7 +152,10 @@ export default function Shop() {
             updatedCart = cart.map((item) =>
                 item.id === selectedProduct.id &&
                 item.size === selectedSize
-                    ? { ...item, quantity: item.quantity + quantity }
+                    ? {
+                        ...item,
+                        quantity: item.quantity + quantity
+                    }
                     : item
             );
         } else {
@@ -130,15 +164,18 @@ export default function Shop() {
                 {
                     id: selectedProduct.id,
                     name: selectedProduct.name,
-                    price: selectedProduct.price,
-                    image: selectedProduct.image,
+                    price: Number(selectedProduct.price),
+                    image: selectedProduct.image_url,
                     size: selectedSize,
                     quantity
                 }
             ];
         }
 
-        localStorage.setItem(CART_KEY, JSON.stringify(updatedCart));
+        localStorage.setItem(
+            CART_KEY,
+            JSON.stringify(updatedCart)
+        );
 
         const newCount = updatedCart.reduce(
             (total, item) => total + item.quantity,
@@ -155,20 +192,49 @@ export default function Shop() {
 
         setAdded(true);
 
-        // Automatically close the modal after 0.7 seconds.
         setTimeout(() => {
             closeModal();
         }, 700);
     };
 
+    // ==========================================
+    // RETRY FETCH
+    // ==========================================
+
+    const retryFetch = async () => {
+        try {
+            setLoading(true);
+            setError('');
+
+            const response = await fetch(`${API_URL}/api/products`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            setProducts(data.products || []);
+
+        } catch (error) {
+            console.error(error);
+            setError('We couldn’t load the collection. Please try again.');
+
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <section className="bg-white px-6 md:px-12 py-16 md:py-20 font-six">
+        <section
+            id="shop"
+            className="bg-white px-6 md:px-12 py-16 md:py-20 font-six"
+        >
 
             {/* SHOP HEADER */}
+
             <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-10">
 
                 <div>
-
                     <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-black">
                         Shop.
                     </h1>
@@ -178,86 +244,149 @@ export default function Shop() {
                     </p>
                 </div>
 
-                {/* PRODUCT COUNT AND SORT */}
-                <div className="flex justify-between md:justify-end items-center gap-5">
+                {/* SORT SELECTOR */}
 
-                    
+                <div className="relative flex items-center border border-neutral-300 rounded-full px-4 py-2.5 hover:border-neutral-500 transition-colors w-fit">
 
-                    {/* SORT SELECTOR */}
-                    <div className="relative flex items-center border border-neutral-300 rounded-full px-4 py-2.5 hover:border-neutral-500 transition-colors">
-                        <FiCheck className="text-neutral-400 text-xs mr-2" />
+                    <FiCheck className="text-neutral-400 text-xs mr-2" />
 
-                        <select
-                            value={sort}
-                            onChange={(e) => setSort(e.target.value)}
-                            className="bg-transparent text-xs outline-none appearance-none cursor-pointer pr-5"
-                        >
-                            <option value="newest">Newest</option>
-                            <option value="low">Price: Low to High</option>
-                            <option value="high">Price: High to Low</option>
-                        </select>
+                    <select
+                        value={sort}
+                        onChange={(e) => setSort(e.target.value)}
+                        className="bg-transparent text-xs outline-none appearance-none cursor-pointer pr-5"
+                    >
+                        <option value="newest">Newest</option>
+                        <option value="low">Price: Low to High</option>
+                        <option value="high">Price: High to Low</option>
+                    </select>
 
-                        <FiChevronDown className="absolute right-3 text-xs pointer-events-none" />
-                    </div>
+                    <FiChevronDown className="absolute right-3 text-xs pointer-events-none" />
+
                 </div>
+
             </div>
+
+            {/* LOADING */}
+
+            {loading && (
+                <div className="min-h-[300px] flex flex-col items-center justify-center gap-4">
+
+                    <FiLoader className="text-2xl animate-spin" />
+
+                    <p className="text-xs text-neutral-500">
+                        Loading collection...
+                    </p>
+
+                </div>
+            )}
+
+            {/* ERROR */}
+
+            {!loading && error && (
+                <div className="min-h-[300px] flex flex-col items-center justify-center gap-4">
+
+                    <p className="text-sm text-neutral-500">
+                        {error}
+                    </p>
+
+                    <button
+                        onClick={retryFetch}
+                        className="bg-black text-white px-6 py-3 rounded-full text-xs"
+                    >
+                        Try Again
+                    </button>
+
+                </div>
+            )}
+
+            {/* EMPTY COLLECTION */}
+
+            {!loading && !error && products.length === 0 && (
+                <div className="min-h-[300px] flex flex-col items-center justify-center gap-3">
+
+                    <h2 className="text-xl font-semibold">
+                        Nothing here just yet.
+                    </h2>
+
+                    <p className="text-sm text-neutral-500">
+                        Our collection is getting ready. Check back soon.
+                    </p>
+
+                </div>
+            )}
 
             {/* PRODUCT GRID */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-10">
 
-                {sortedProducts.map((product) => (
-                    <div key={product.id} className="group">
+            {!loading && !error && products.length > 0 && (
 
-                        {/* PRODUCT IMAGE */}
-                        <div className="relative aspect-[4/5] bg-neutral-50 overflow-hidden rounded-lg">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-10">
 
-                            <div className="absolute top-3 left-3 z-10 bg-white px-3 py-1.5 rounded-full">
-                                <p className="text-[9px] uppercase tracking-wider">
-                                    Pre-order
-                                </p>
+                    {sortedProducts.map((product) => (
+
+                        <div key={product.id} className="group">
+
+                            {/* PRODUCT IMAGE */}
+
+                            <div className="relative aspect-[4/5] bg-neutral-50 overflow-hidden rounded-lg">
+
+                                <div className="absolute top-3 left-3 z-10 bg-white px-3 py-1.5 rounded-full">
+                                    <p className="text-[9px] uppercase tracking-wider">
+                                        Pre-order
+                                    </p>
+                                </div>
+
+                                <img
+                                    src={product.image_url}
+                                    alt={product.name}
+                                    loading="lazy"
+                                    className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                                />
+
+                                <button
+                                    onClick={() => openModal(product)}
+                                    aria-label={`Choose size for ${product.name}`}
+                                    className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-sm hover:bg-black hover:text-white transition-all duration-300"
+                                >
+                                    <FiPlus className="text-lg" />
+                                </button>
+
                             </div>
 
-                            <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
-                            />
+                            {/* PRODUCT DETAILS */}
 
-                            <button
-                                onClick={() => openModal(product)}
-                                aria-label={`Choose size for ${product.name}`}
-                                className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-sm hover:bg-black hover:text-white transition-all duration-300"
-                            >
-                                <FiPlus className="text-lg" />
-                            </button>
+                            <div className="mt-3">
+
+                                <p className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1">
+                                    {product.category}
+                                </p>
+
+                                <p className="text-sm font-medium text-black">
+                                    {product.name}
+                                </p>
+
+                                <p className="text-sm font-semibold mt-1">
+                                    {formatPrice(product.price)}
+                                </p>
+
+                            </div>
+
                         </div>
 
-                        {/* PRODUCT DETAILS */}
-                        <div className="mt-3">
-                            <p className="text-[10px] uppercase tracking-wider text-neutral-400 mb-1">
-                                {product.category}
-                            </p>
+                    ))}
 
-                            <p className="text-sm font-medium text-black">
-                                {product.name}
-                            </p>
+                </div>
 
-                            <p className="text-sm font-semibold mt-1">
-                                {formatPrice(product.price)}
-                            </p>
-                        </div>
-
-                    </div>
-                ))}
-
-            </div>
+            )}
 
             {/* SIZE SELECTION MODAL */}
+
             {selectedProduct && (
+
                 <div
                     className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4"
                     onClick={closeModal}
                 >
+
                     <div
                         role="dialog"
                         aria-modal="true"
@@ -267,6 +396,7 @@ export default function Shop() {
                     >
 
                         {/* CLOSE BUTTON */}
+
                         <button
                             onClick={closeModal}
                             aria-label="Close modal"
@@ -276,17 +406,21 @@ export default function Shop() {
                         </button>
 
                         {/* PRODUCT INFORMATION */}
+
                         <div className="flex gap-4 items-center pr-8">
 
                             <div className="w-24 aspect-[4/5] bg-neutral-50 rounded-lg overflow-hidden shrink-0">
+
                                 <img
-                                    src={selectedProduct.image}
+                                    src={selectedProduct.image_url}
                                     alt={selectedProduct.name}
                                     className="w-full h-full object-contain p-2"
                                 />
+
                             </div>
 
                             <div>
+
                                 <p className="text-xs text-neutral-400 uppercase tracking-wider mb-2">
                                     Pre-order
                                 </p>
@@ -298,6 +432,7 @@ export default function Shop() {
                                 <p className="text-sm font-semibold mt-2">
                                     {formatPrice(selectedProduct.price)}
                                 </p>
+
                             </div>
 
                         </div>
@@ -305,8 +440,11 @@ export default function Shop() {
                         <div className="border-t border-neutral-100 my-6" />
 
                         {/* SIZE SELECTION */}
+
                         <div>
+
                             <div className="flex justify-between items-center mb-3">
+
                                 <p className="text-sm font-semibold">
                                     Select your size
                                 </p>
@@ -314,10 +452,13 @@ export default function Shop() {
                                 <p className="text-[10px] text-neutral-400">
                                     Required
                                 </p>
+
                             </div>
 
                             <div className="grid grid-cols-4 gap-2">
+
                                 {sizes.map((size) => (
+
                                     <button
                                         key={size}
                                         onClick={() => setSelectedSize(size)}
@@ -329,17 +470,23 @@ export default function Shop() {
                                     >
                                         {size}
                                     </button>
+
                                 ))}
+
                             </div>
+
                         </div>
 
                         {/* QUANTITY */}
+
                         <div className="flex justify-between items-center mt-7">
+
                             <p className="text-sm font-semibold">
                                 Quantity
                             </p>
 
                             <div className="flex items-center gap-5">
+
                                 <button
                                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                                     disabled={quantity === 1}
@@ -360,10 +507,13 @@ export default function Shop() {
                                 >
                                     <FiPlus />
                                 </button>
+
                             </div>
+
                         </div>
 
                         {/* ADD TO CART */}
+
                         <button
                             onClick={addToCart}
                             disabled={!selectedSize || added}
@@ -379,7 +529,9 @@ export default function Shop() {
                         </button>
 
                     </div>
+
                 </div>
+
             )}
 
         </section>
